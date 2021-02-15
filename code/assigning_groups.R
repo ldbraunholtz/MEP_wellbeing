@@ -41,3 +41,14 @@ groups %>% count(group)
 
 write_csv(groups, "outputs/groups.csv")
 
+## creating variables datasheet
+## read in data:
+mepwell <- read_csv(here("data", "MEP_Wellbeing.csv"))
+
+names <- unique(mepwell$Name) # extract names of contestants
+
+# create dataframe for variables
+df <- data.frame(Name = names, Postcode = NA, N_household = NA, N_children = NA, Comp_increase = NA)
+
+write.csv(df, here("data", "Variables.csv"), row.names = FALSE)
+

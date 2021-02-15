@@ -17,7 +17,7 @@ library(here)
 team_colours <- c("3" = "#768D3B", "Royal purple" = "#886F50", "Goaldiggers" = "#6AB0DB", "TEAM: - If you're\nhappy and you know\nit, wash your hands" = "#B9E39D", "Well in Hell" = "#E5F6F9", Wellabies = "#E9E1D6")
 
 ## read in data:
-mepwell <- read_csv(here("outputs", "MEP_Wellbeing.csv"))
+mepwell <- read_csv(here("data", "MEP_Wellbeing.csv"))
 
 ###----------------- Tidy the data -----------------####
 
@@ -34,6 +34,8 @@ mepwell$Group[mepwell$Group == "TEAM: - If you're happy and you know it, wash yo
 # create activity categories
 
 mepwell$Category <- as.factor(mepwell$Activity)
+
+unique(mepwell$Activity)
 
 mepwell$Category <- 
   fct_collapse(mepwell$Category,
@@ -145,3 +147,22 @@ ggplot(progresssummary, aes(x = sumpp, y = fct_reorder(Group, sumpp), fill = Gro
   plottheme +
   theme(legend.position = "none")
 ggsave("outputs/minutespppgroup_finalweek.jpg")
+
+###----------------- for postcard entry -----------------###
+
+mepwell %>%
+  mutate(tot_time = rowSums(.[4:31], na.rm = TRUE)) %>%
+  group_by(Group, Name) %>%
+  summarise(person_time = sum(tot_time)) -> person_time
+
+mepwell %>%
+  mutate(tot_time = rowSums(.[4:31], na.rm = TRUE)) %>%
+  group_by(Group, Activity) %>%
+  mutate(Cat_time = sum(tot_time)) %>%
+  summarise(top_act = max(tot_time), .groups = "drop_last") %>%
+  slice(which.max(top_act)) -> top_act
+
+left_join(person_time, top_act, by = "Group") %>%
+  select(-top_act) -> final_spread
+
+write.csv(final_spread, here("outputs", "final_summary.csv"), row.names = FALSE)
